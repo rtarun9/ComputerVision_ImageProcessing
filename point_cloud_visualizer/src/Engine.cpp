@@ -5,6 +5,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#define TINYOBJLOADER_IMPLEMENTATION
+#include <tiny_obj_loader.h>
+
 using namespace math;
 
 Engine::Engine(const std::string_view windowTitle) : pcviz::Application(windowTitle) {}
@@ -21,7 +24,7 @@ void Engine::loadContent()
         .pixelShaderPath = L"shaders/TestShader.hlsl",
         .inputLayoutElements =
             {
-                pcviz::InputLayoutElementDesc{.semanticName = "Position", .format = DXGI_FORMAT_R32G32_FLOAT, .inputClassification = D3D11_INPUT_PER_VERTEX_DATA},
+                pcviz::InputLayoutElementDesc{.semanticName = "Position", .format = DXGI_FORMAT_R32G32B32_FLOAT, .inputClassification = D3D11_INPUT_PER_VERTEX_DATA},
                 pcviz::InputLayoutElementDesc{.semanticName = "TextureCoord", .format = DXGI_FORMAT_R32G32_FLOAT, .inputClassification = D3D11_INPUT_PER_VERTEX_DATA},
             },
         .primitiveTopology = D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
@@ -34,87 +37,69 @@ void Engine::loadContent()
 
     m_renderTarget = createRenderTarget(m_windowWidth, m_windowHeight, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB);
 
-    m_texture = createTexture(L"../data/stereo/left_camera_view.jpg");
+    m_texture = createTexture(L"../data/stereo/left.jpg");
     m_depthMap = createTexture(L"../data/stereo/depth_map.jpg");
 
-    int width{};
-    int height{};
-
+    // hardcoding texel count for depth map.
     std::vector<pcviz::VertexPosTexCoord> vertexData{};
 
-    vertexData.emplace_back(pcviz::VertexPosTexCoord{
-        .position =
+    m_depthMapTexelCount = 60 * 132;
+
+    // Load the cube obj model.
+
+    tinyobj::attrib_t attrib;
+    std::vector<tinyobj::shape_t> shapes;
+    std::vector<tinyobj::material_t> materials;
+
+    std::string warn;
+    std::string err;
+
+    bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, "assets/cube.obj");
+
+    // Loop over shapes
+    for (size_t s = 0; s < shapes.size(); s++)
+    {
+        // Loop over faces(polygon)
+        size_t index_offset = 0;
+        for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++)
+        {
+            size_t fv = size_t(shapes[s].mesh.num_face_vertices[f]);
+
+            // Loop over vertices in the face.
+            for (size_t v = 0; v < fv; v++)
             {
-                -1.0f,
-                1.0f,
-            },
-        .texCoord = {0.0f, 0.0f},
-    });
-    vertexData.emplace_back(pcviz::VertexPosTexCoord{
-        .position =
-            {
-                1.0f,
-                1.0f,
-            },
-        .texCoord = {1.0f, 0.0f},
-    });
-    vertexData.emplace_back(pcviz::VertexPosTexCoord{
-        .position =
-            {
-                -1.0f,
-                -1.0f,
-            },
-        .texCoord = {0.0f, 1.0f},
-    });
-    vertexData.emplace_back(pcviz::VertexPosTexCoord{
-        .position =
-            {
-                -1.0f,
-                -1.0f,
-            },
-        .texCoord = {0.0f, 1.0f},
-    });
-    vertexData.emplace_back(pcviz::VertexPosTexCoord{
-        .position =
-            {
-                1.0f,
-                1.0f,
-            },
-        .texCoord = {1.0f, 0.0f},
-    });
-    vertexData.emplace_back(pcviz::VertexPosTexCoord{
-        .position =
-            {
-                1.0f,
-                -1.0f,
-            },
-        .texCoord = {1.0f, 1.0f},
-    });
+                // access to vertex
+                tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
+
+                tinyobj::real_t vx = attrib.vertices[3 * size_t(idx.vertex_index) + 0];
+                tinyobj::real_t vy = attrib.vertices[3 * size_t(idx.vertex_index) + 1];
+                tinyobj::real_t vz = attrib.vertices[3 * size_t(idx.vertex_index) + 2];
+
+                tinyobj::real_t tx = attrib.texcoords[2 * size_t(idx.texcoord_index) + 0];
+                tinyobj::real_t ty = 1.0f - attrib.texcoords[2 * size_t(idx.texcoord_index) + 1];
+
+                vertexData.emplace_back(pcviz::VertexPosTexCoord{.position = {vx, vy, vz}, .texCoord{tx, ty}});
+            }
+            index_offset += fv;
+
+            // per-face material
+            shapes[s].mesh.material_ids[f];
+        }
+    }
 
     m_vertexBuffer = createBuffer<pcviz::VertexPosTexCoord>(pcviz::BufferCreationDesc{.usage = D3D11_USAGE_IMMUTABLE, .bindFlags = D3D11_BIND_VERTEX_BUFFER}, vertexData);
     m_verticesCount = vertexData.size();
-
-    D3D11_BLEND_DESC blendDesc{};
-
-    blendDesc.IndependentBlendEnable = FALSE;
-    blendDesc.RenderTarget[0].BlendEnable = TRUE;
-    blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_SRC_ALPHA;
-    blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_COLOR;
-    blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_DEST_COLOR;
-    blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-    blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-    blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_DEST_ALPHA;
-
-    throwIfFailed(m_device->CreateBlendState(&blendDesc, &m_blendState));
 }
 
 void Engine::update(const float deltaTime)
 {
     m_camera.update(deltaTime);
 
+    const math::XMMATRIX modelMatrix = math::XMMatrixScaling(0.1f, 0.1f, 0.1f);
     const math::XMMATRIX viewMatrix = m_camera.getLookAtMatrix();
     const math::XMMATRIX projectionMatrix = math::XMMatrixPerspectiveFovLH(math::XMConvertToRadians(45.0f), m_windowWidth / static_cast<float>(m_windowHeight), 0.1f, 250.0f);
 
+    m_sceneBuffer.data.modelMatrix = modelMatrix;
     m_sceneBuffer.data.viewMatrix = viewMatrix;
     m_sceneBuffer.data.viewProjectionMatrix = viewMatrix * projectionMatrix;
 
@@ -131,7 +116,7 @@ void Engine::render()
     ImGui::Begin("Scene menu");
     ImGui::SliderFloat("camera mvmt speed", &m_camera.m_movementSpeed, 0.1f, 50.0f);
     ImGui::SliderFloat("camera rotation speed", &m_camera.m_rotationSpeed, 0.1f, 3.0f);
-    ImGui::SliderFloat("layer count", &m_sceneBuffer.data.layerCount, 0.0f, 1.5f);
+    ImGui::SliderFloat("layer count", &m_sceneBuffer.data.layerCount, 0.0f, 20.5f);
 
     ImGui::End();
 
@@ -158,12 +143,15 @@ void Engine::render()
     ctx->IASetVertexBuffers(0u, 1u, m_vertexBuffer.GetAddressOf(), &stride, &offset);
 
     ctx->VSSetConstantBuffers(0u, 1u, m_sceneBuffer.buffer.GetAddressOf());
+    ctx->VSSetSamplers(0u, 1u, m_wrapSampler.GetAddressOf());
+    ctx->VSSetShaderResources(0u, 1u, m_depthMap.GetAddressOf());
+
     ctx->PSSetConstantBuffers(0u, 1u, m_sceneBuffer.buffer.GetAddressOf());
     ctx->PSSetSamplers(0u, 1u, m_wrapSampler.GetAddressOf());
     ctx->PSSetShaderResources(0u, 1u, m_texture.GetAddressOf());
     ctx->PSSetShaderResources(1u, 1u, m_depthMap.GetAddressOf());
 
-    ctx->Draw(m_verticesCount, 0u);
+    ctx->DrawInstanced(m_verticesCount, m_depthMapTexelCount, 0u,  0u);
 
     ImGui::Render();
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());

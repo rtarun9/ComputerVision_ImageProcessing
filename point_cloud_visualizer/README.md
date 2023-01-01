@@ -1,1 +1,1 @@
-# SimpleGfx
+# Point Cloud Visualizer

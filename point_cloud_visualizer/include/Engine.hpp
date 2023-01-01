@@ -16,6 +16,7 @@ class Engine final : public pcviz::Application
     pcviz::RenderTarget m_renderTarget{};
 
     comptr<ID3D11Buffer> m_vertexBuffer{};
+    comptr<ID3D11Buffer> m_indexBuffer{};
 
     comptr<ID3D11SamplerState> m_wrapSampler{};
 
@@ -25,7 +26,7 @@ class Engine final : public pcviz::Application
 
     comptr<ID3D11ShaderResourceView> m_texture{};
     comptr<ID3D11ShaderResourceView> m_depthMap{};
-    uint32_t m_verticesCount{};
 
-    comptr<ID3D11BlendState> m_blendState{};
+    uint32_t m_verticesCount{};
+    uint32_t m_depthMapTexelCount{};
 };

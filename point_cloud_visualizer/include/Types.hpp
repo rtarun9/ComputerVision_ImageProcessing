@@ -6,7 +6,7 @@ namespace pcviz
 
     struct VertexPosTexCoord
     {
-        math::XMFLOAT2 position{};
+        math::XMFLOAT3 position{};
         math::XMFLOAT2 texCoord{};
     };
 
@@ -14,6 +14,7 @@ namespace pcviz
 
     struct alignas(256) SceneBuffer
     {
+        math::XMMATRIX modelMatrix{};
         math::XMMATRIX viewMatrix{};
         math::XMMATRIX viewProjectionMatrix{};
         float layerCount{1.0f};

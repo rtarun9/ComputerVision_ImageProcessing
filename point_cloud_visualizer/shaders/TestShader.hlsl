@@ -1,6 +1,6 @@
 struct VSInput
 {
-    float2 position : POSITION;
+    float3 position : POSITION;
     float2 textureCoord : TEXTURECOORD;
 };
 
@@ -12,36 +12,49 @@ struct VSOutput
 
 cbuffer sceneBuffer : register(b0)
 {
+    row_major matrix modelMatrix;
     row_major matrix viewMatrix;
     row_major matrix viewProjectionMatrix;
     float layerCount;
 }
 
-VSOutput VsMain(VSInput input)
+Texture2D<float> depthTexture : register(t0);
+SamplerState smp : register(s0); 
+
+VSOutput VsMain(VSInput input, uint instanceID : SV_InstanceID)
 {
+    const int IMG_WIDTH = 132;
+    const int IMG_HEIGHT = 60;
+
+    int width;
+    int height;
+    depthTexture.GetDimensions(width, height);
+
+    const float2 offset = 1.0f / float2(width, height);
+
+    float2 texCoords = float2(instanceID / IMG_HEIGHT, (instanceID % IMG_HEIGHT)) / float2((float)IMG_WIDTH, (float)IMG_HEIGHT);
+    texCoords.x = 1.0f - texCoords.x;
+
+    const float zCoord = 25.0f * instanceID / IMG_WIDTH;
+
     VSOutput output;
-    output.position = mul(float4(input.position.xy, 1.0f, 1.0f), viewProjectionMatrix);
-    output.textureCoord = input.textureCoord;
+    output.position = mul(mul(float4(input.position.xyz + float3(texCoords * float2(IMG_WIDTH, IMG_HEIGHT), 0.0f), 1.0f), modelMatrix), viewProjectionMatrix);
+    output.textureCoord = texCoords;
 
     return output;
 }
 
 Texture2D<float4> tex : register(t0);
-Texture2D<float> depthTexture : register(t1);
-
-SamplerState smp : register(s0);
 
 struct PSOutput
 {
     float4 color : SV_Target;
-    float depth : SV_Depth;
 };
 
 PSOutput PsMain(VSOutput input)
 {
     PSOutput output;
     output.color = tex.Sample(smp, input.textureCoord);
-    output.depth = depthTexture.Sample(smp, input.textureCoord).x + (1.0f - layerCount);
-
+   
     return output;
 }
