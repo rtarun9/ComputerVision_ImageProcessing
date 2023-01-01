@@ -35,40 +35,10 @@ void Engine::loadContent()
     m_renderTarget = createRenderTarget(m_windowWidth, m_windowHeight, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB);
 
     m_texture = createTexture(L"../data/stereo/left_camera_view.jpg");
+    m_depthMap = createTexture(L"../data/stereo/depth_map.jpg");
+
     int width{};
     int height{};
-    int components{};
-
-    const auto* data = stbi_loadf("../data/stereo/depth_map.hdr", &width, &height, nullptr, 1u);
-    D3D11_TEXTURE2D_DESC textureDesc{};
-    textureDesc.Width = width;
-    textureDesc.Height = height;
-    textureDesc.MipLevels = 1;
-    textureDesc.ArraySize = 1;
-    textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-
-    textureDesc.Format = DXGI_FORMAT_R32_FLOAT;
-
-    textureDesc.SampleDesc.Count = 1;
-    textureDesc.Usage = D3D11_USAGE_DEFAULT;
-
-    D3D11_SUBRESOURCE_DATA textureSubresourceData{};
-    // subresource 0 is ready to be done is thread's work is already done
-    textureSubresourceData.pSysMem = std::move(data);
-    textureSubresourceData.SysMemPitch = width * sizeof(float);
-    textureSubresourceData.SysMemSlicePitch = 0;
-
-    // Create texture view
-    D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc = {};
-    shaderResourceViewDesc.Format = textureDesc.Format;
-    shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-    shaderResourceViewDesc.Texture2D.MipLevels = textureDesc.MipLevels;
-    shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
-
-    comptr<ID3D11Texture2D> texture{};
-    throwIfFailed(m_device->CreateTexture2D(&textureDesc, &textureSubresourceData, &texture));
-
-    throwIfFailed(m_device->CreateShaderResourceView(texture.Get(), &shaderResourceViewDesc, &m_depthMap));
 
     std::vector<pcviz::VertexPosTexCoord> vertexData{};
 
@@ -161,6 +131,7 @@ void Engine::render()
     ImGui::Begin("Scene menu");
     ImGui::SliderFloat("camera mvmt speed", &m_camera.m_movementSpeed, 0.1f, 50.0f);
     ImGui::SliderFloat("camera rotation speed", &m_camera.m_rotationSpeed, 0.1f, 3.0f);
+    ImGui::SliderFloat("layer count", &m_sceneBuffer.data.layerCount, 0.0f, 1.5f);
 
     ImGui::End();
 

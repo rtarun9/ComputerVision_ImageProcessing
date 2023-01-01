@@ -16,6 +16,7 @@ namespace pcviz
     {
         math::XMMATRIX viewMatrix{};
         math::XMMATRIX viewProjectionMatrix{};
+        float layerCount{1.0f};
     };
 
     struct InputLayoutElementDesc

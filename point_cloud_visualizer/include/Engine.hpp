@@ -21,6 +21,7 @@ class Engine final : public pcviz::Application
 
     pcviz::GraphicsPipeline m_pipeline{};
     pcviz::ConstantBuffer<pcviz::SceneBuffer> m_sceneBuffer{};
+    std::vector<float> m_depthData{};
 
     comptr<ID3D11ShaderResourceView> m_texture{};
     comptr<ID3D11ShaderResourceView> m_depthMap{};

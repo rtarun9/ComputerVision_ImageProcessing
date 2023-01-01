@@ -14,6 +14,7 @@ cbuffer sceneBuffer : register(b0)
 {
     row_major matrix viewMatrix;
     row_major matrix viewProjectionMatrix;
+    float layerCount;
 }
 
 VSOutput VsMain(VSInput input)
@@ -40,7 +41,7 @@ PSOutput PsMain(VSOutput input)
 {
     PSOutput output;
     output.color = tex.Sample(smp, input.textureCoord);
-    output.depth = 1.0 - depthTexture.Sample(smp, input.textureCoord).x;
+    output.depth = depthTexture.Sample(smp, input.textureCoord).x + (1.0f - layerCount);
 
     return output;
 }
