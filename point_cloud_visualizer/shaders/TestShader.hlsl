@@ -23,22 +23,22 @@ SamplerState smp : register(s0);
 
 VSOutput VsMain(VSInput input, uint instanceID : SV_InstanceID)
 {
-    const int IMG_WIDTH = 132;
-    const int IMG_HEIGHT = 60;
-
     int width;
     int height;
     depthTexture.GetDimensions(width, height);
 
+    const int IMG_WIDTH = width;
+    const int IMG_HEIGHT = height;
+
     const float2 offset = 1.0f / float2(width, height);
 
     float2 texCoords = float2(instanceID / IMG_HEIGHT, (instanceID % IMG_HEIGHT)) / float2((float)IMG_WIDTH, (float)IMG_HEIGHT);
-    texCoords.x = 1.0f - texCoords.x;
+    texCoords.y = 1.0f - texCoords.y;
 
-    const float zCoord = 25.0f * instanceID / IMG_WIDTH;
+    const float zCoord = depthTexture.SampleLevel(smp, texCoords, 0u).x * layerCount;
 
     VSOutput output;
-    output.position = mul(mul(float4(input.position.xyz + float3(texCoords * float2(IMG_WIDTH, IMG_HEIGHT), 0.0f), 1.0f), modelMatrix), viewProjectionMatrix);
+    output.position = mul(mul(float4(input.position.xyz + float3(texCoords * float2(IMG_WIDTH, -IMG_HEIGHT), abs(zCoord)), 1.0f), modelMatrix), viewProjectionMatrix);
     output.textureCoord = texCoords;
 
     return output;

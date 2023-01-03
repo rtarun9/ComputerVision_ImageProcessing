@@ -43,7 +43,7 @@ void Engine::loadContent()
     // hardcoding texel count for depth map.
     std::vector<pcviz::VertexPosTexCoord> vertexData{};
 
-    m_depthMapTexelCount = 60 * 132;
+    m_depthMapTexelCount = 400 * 879;
 
     // Load the cube obj model.
 
@@ -95,7 +95,7 @@ void Engine::update(const float deltaTime)
 {
     m_camera.update(deltaTime);
 
-    const math::XMMATRIX modelMatrix = math::XMMatrixScaling(0.1f, 0.1f, 0.1f);
+    const math::XMMATRIX modelMatrix = math::XMMatrixScaling(0.01f, 0.01f, 0.01f);
     const math::XMMATRIX viewMatrix = m_camera.getLookAtMatrix();
     const math::XMMATRIX projectionMatrix = math::XMMatrixPerspectiveFovLH(math::XMConvertToRadians(45.0f), m_windowWidth / static_cast<float>(m_windowHeight), 0.1f, 250.0f);
 
@@ -113,16 +113,18 @@ void Engine::render()
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
 
+    static std::array<float, 4> clearColor{0.2f, 0.2f, 0.2f, 1.0f};
+
     ImGui::Begin("Scene menu");
     ImGui::SliderFloat("camera mvmt speed", &m_camera.m_movementSpeed, 0.1f, 50.0f);
     ImGui::SliderFloat("camera rotation speed", &m_camera.m_rotationSpeed, 0.1f, 3.0f);
-    ImGui::SliderFloat("layer count", &m_sceneBuffer.data.layerCount, 0.0f, 20.5f);
+    ImGui::SliderFloat("layer count", &m_sceneBuffer.data.layerCount, 0.0f, 20000.5f);
+    ImGui::ColorEdit3("bg color", clearColor.data());
 
     ImGui::End();
 
     auto& ctx = m_deviceContext;
 
-    constexpr std::array<float, 4> clearColor{0.2f, 0.2f, 0.2f, 1.0f};
 
     ctx->ClearDepthStencilView(m_depthTexture.dsv.Get(), D3D11_CLEAR_DEPTH, 1.0f, 1u);
 
