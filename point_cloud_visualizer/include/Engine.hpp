@@ -26,6 +26,7 @@ class Engine final : public pcviz::Application
 
     comptr<ID3D11ShaderResourceView> m_texture{};
     comptr<ID3D11ShaderResourceView> m_depthMap{};
+    comptr<ID3D11ShaderResourceView> m_disparityMap{};
 
     uint32_t m_verticesCount{};
     uint32_t m_depthMapTexelCount{};

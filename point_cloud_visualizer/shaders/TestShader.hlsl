@@ -16,9 +16,10 @@ cbuffer sceneBuffer : register(b0)
     row_major matrix viewMatrix;
     row_major matrix viewProjectionMatrix;
     float layerCount;
+    uint imageSelect;
 }
 
-Texture2D<float> depthTexture : register(t0);
+Texture2D<float4> depthTexture : register(t0);
 SamplerState smp : register(s0); 
 
 VSOutput VsMain(VSInput input, uint instanceID : SV_InstanceID)
@@ -35,16 +36,19 @@ VSOutput VsMain(VSInput input, uint instanceID : SV_InstanceID)
     float2 texCoords = float2(instanceID / IMG_HEIGHT, (instanceID % IMG_HEIGHT)) / float2((float)IMG_WIDTH, (float)IMG_HEIGHT);
     texCoords.y = 1.0f - texCoords.y;
 
-    const float zCoord = depthTexture.SampleLevel(smp, texCoords, 0u).x * layerCount;
+    const float3 depthTextureValue = depthTexture.SampleLevel(smp, texCoords, 0u).xyz;
+
+    const float zCoord = -1.0f * (depthTextureValue.x + depthTextureValue.y + depthTextureValue.z) * layerCount;
 
     VSOutput output;
-    output.position = mul(mul(float4(input.position.xyz + float3(texCoords * float2(IMG_WIDTH, -IMG_HEIGHT), abs(zCoord)), 1.0f), modelMatrix), viewProjectionMatrix);
+    output.position = mul(mul(float4(input.position.xyz + float3(texCoords * float2(IMG_WIDTH, -IMG_HEIGHT), (zCoord)), 1.0f), modelMatrix), viewProjectionMatrix);
     output.textureCoord = texCoords;
 
     return output;
 }
 
-Texture2D<float4> tex : register(t0);
+Texture2D<float4> tex : register(t1);
+Texture2D<float4> disparityMap : register(t2);
 
 struct PSOutput
 {
@@ -54,7 +58,19 @@ struct PSOutput
 PSOutput PsMain(VSOutput input)
 {
     PSOutput output;
-    output.color = tex.Sample(smp, input.textureCoord);
+    
+    if (imageSelect == 0u)
+    {
+        output.color = tex.Sample(smp, input.textureCoord);
+    }
+    else if (imageSelect == 1u)
+    {
+        output.color = disparityMap.Sample(smp, input.textureCoord);
+    }
+    else if (imageSelect == 2u)
+    {
+        output.color = depthTexture.Sample(smp, input.textureCoord).ggga;
+    }
    
     return output;
 }

@@ -18,6 +18,7 @@ namespace pcviz
         math::XMMATRIX viewMatrix{};
         math::XMMATRIX viewProjectionMatrix{};
         float layerCount{1.0f};
+        int32_t imageSelect{0};// 0 -> Source image, 1 -> Disparity map, 2 -> Depth map
     };
 
     struct InputLayoutElementDesc

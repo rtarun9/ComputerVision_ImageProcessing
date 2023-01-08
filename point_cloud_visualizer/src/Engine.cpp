@@ -39,10 +39,11 @@ void Engine::loadContent()
 
     m_texture = createTexture(L"../data/stereo/left.jpg");
     m_depthMap = createTexture(L"../data/stereo/depth_map.jpg");
+    m_disparityMap = createTexture(L"../data/stereo/disparity_map.jpg");
 
-    // hardcoding texel count for depth map.
+    // hardcoding texel count for depth map :(.
     std::vector<pcviz::VertexPosTexCoord> vertexData{};
-
+    
     m_depthMapTexelCount = 400 * 879;
 
     // Load the cube obj model.
@@ -113,12 +114,13 @@ void Engine::render()
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
 
-    static std::array<float, 4> clearColor{0.2f, 0.2f, 0.2f, 1.0f};
+    static std::array<float, 4> clearColor{0.0f, 0.0f, 0.0f, 1.0f};
 
     ImGui::Begin("Scene menu");
     ImGui::SliderFloat("camera mvmt speed", &m_camera.m_movementSpeed, 0.1f, 50.0f);
     ImGui::SliderFloat("camera rotation speed", &m_camera.m_rotationSpeed, 0.1f, 3.0f);
     ImGui::SliderFloat("layer count", &m_sceneBuffer.data.layerCount, 0.0f, 20000.5f);
+    ImGui::SliderInt("image select", &m_sceneBuffer.data.imageSelect, 0, 2);
     ImGui::ColorEdit3("bg color", clearColor.data());
 
     ImGui::End();
@@ -150,8 +152,9 @@ void Engine::render()
 
     ctx->PSSetConstantBuffers(0u, 1u, m_sceneBuffer.buffer.GetAddressOf());
     ctx->PSSetSamplers(0u, 1u, m_wrapSampler.GetAddressOf());
-    ctx->PSSetShaderResources(0u, 1u, m_texture.GetAddressOf());
-    ctx->PSSetShaderResources(1u, 1u, m_depthMap.GetAddressOf());
+    ctx->PSSetShaderResources(0u, 1u, m_disparityMap.GetAddressOf());
+    ctx->PSSetShaderResources(1u, 1u, m_texture.GetAddressOf());
+    ctx->PSSetShaderResources(2u, 1u, m_depthMap.GetAddressOf());
 
     ctx->DrawInstanced(m_verticesCount, m_depthMapTexelCount, 0u,  0u);
 

@@ -96,7 +96,7 @@ namespace pcviz
         m_windowHeight = static_cast<uint32_t>(monitorHeight * 1.00f);
 
         // Not made const as SDL_DestroyWindow requires us to pass a non - const SDL_Window.
-        SDL_Window* m_window = SDL_CreateWindow("SimpleGfx", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, m_windowWidth, m_windowHeight, SDL_WINDOW_ALLOW_HIGHDPI);
+        SDL_Window* m_window = SDL_CreateWindow("Point Cloud Visualizer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, m_windowWidth, m_windowHeight, SDL_WINDOW_ALLOW_HIGHDPI);
 
         if (!m_window)
         {
