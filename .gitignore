@@ -138,3 +138,6 @@ dmypy.json
 bin/
 obj/
 packages/
+
+
+data/full_video
