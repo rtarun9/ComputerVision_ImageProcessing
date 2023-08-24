@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+tests/
+college_related/
+
 # C extensions
 *.so
 
@@ -141,3 +144,4 @@ packages/
 
 
 data/full_video
+data/stereo_video2
