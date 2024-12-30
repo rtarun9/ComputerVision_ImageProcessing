@@ -2,10 +2,10 @@
 
 #include "Application.hpp"
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_syswm.h>
+#include <SDL.h>
+#include <SDL_syswm.h>
 
-#include <DirectXTex.h>
+#include <DirectXTex/DirectXTex.h>
 
 namespace pcviz
 {

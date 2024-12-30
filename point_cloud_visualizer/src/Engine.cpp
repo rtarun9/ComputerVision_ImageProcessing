@@ -20,8 +20,8 @@ void Engine::loadContent()
     });
 
     m_pipeline = createGraphicsPipeline(pcviz::GraphicsPipelineCreationDesc{
-        .vertexShaderPath = L"shaders/TestShader.hlsl",
-        .pixelShaderPath = L"shaders/TestShader.hlsl",
+        .vertexShaderPath = L"../shaders/TestShader.hlsl",
+        .pixelShaderPath = L"../shaders/TestShader.hlsl",
         .inputLayoutElements =
             {
                 pcviz::InputLayoutElementDesc{.semanticName = "Position", .format = DXGI_FORMAT_R32G32B32_FLOAT, .inputClassification = D3D11_INPUT_PER_VERTEX_DATA},
@@ -37,13 +37,13 @@ void Engine::loadContent()
 
     m_renderTarget = createRenderTarget(m_windowWidth, m_windowHeight, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB);
 
-    m_texture = createTexture(L"../data/stereo/left.jpg");
-    m_depthMap = createTexture(L"../data/stereo/depth_map.jpg");
-    m_disparityMap = createTexture(L"../data/stereo/disparity_map.jpg");
+    m_texture = createTexture(L"../../data/stereo/left.jpg");
+    m_depthMap = createTexture(L"../../data/stereo/depth_map.jpg");
+    m_disparityMap = createTexture(L"../../data/stereo/disparity_map.jpg");
 
     // hardcoding texel count for depth map :(.
     std::vector<pcviz::VertexPosTexCoord> vertexData{};
-    
+
     m_depthMapTexelCount = 400 * 879;
 
     // Load the cube obj model.
@@ -55,7 +55,7 @@ void Engine::loadContent()
     std::string warn;
     std::string err;
 
-    bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, "assets/cube.obj");
+    bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, "../assets/cube.obj");
 
     // Loop over shapes
     for (size_t s = 0; s < shapes.size(); s++)
@@ -127,7 +127,6 @@ void Engine::render()
 
     auto& ctx = m_deviceContext;
 
-
     ctx->ClearDepthStencilView(m_depthTexture.dsv.Get(), D3D11_CLEAR_DEPTH, 1.0f, 1u);
 
     ctx->ClearRenderTargetView(m_renderTargetView.Get(), clearColor.data());
@@ -156,7 +155,7 @@ void Engine::render()
     ctx->PSSetShaderResources(1u, 1u, m_texture.GetAddressOf());
     ctx->PSSetShaderResources(2u, 1u, m_depthMap.GetAddressOf());
 
-    ctx->DrawInstanced(m_verticesCount, m_depthMapTexelCount, 0u,  0u);
+    ctx->DrawInstanced(m_verticesCount, m_depthMapTexelCount, 0u, 0u);
 
     ImGui::Render();
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());

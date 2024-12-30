@@ -4,7 +4,7 @@
 
 #include <imgui.h>
 #include <imgui_impl_dx11.h>
-#include <imgui_impl_sdl.h>
+#include <imgui_impl_sdl2.h>
 
 struct SDL_Window;
 
@@ -39,7 +39,8 @@ namespace pcviz
         [[nodiscard]] GraphicsPipeline createGraphicsPipeline(const GraphicsPipelineCreationDesc& pipelineCreationDesc);
 
         [[nodiscard]] wrl::ComPtr<ID3D11ShaderResourceView> createTexture(const std::wstring_view texturePath);
-        template <typename T> [[nodiscard]] wrl::ComPtr<ID3D11ShaderResourceView> createTexture(const std::span<const T> data, const uint32_t width, const uint32_t height, const DXGI_FORMAT format);
+        template <typename T>
+        [[nodiscard]] wrl::ComPtr<ID3D11ShaderResourceView> createTexture(const std::span<const T> data, const uint32_t width, const uint32_t height, const DXGI_FORMAT format);
         [[nodiscard]] wrl::ComPtr<ID3D11SamplerState> createSampler(const SamplerCreationDesc& samplerCreationDesc);
 
         [[nodiscard]] RenderTarget createRenderTarget(const uint32_t width, const uint32_t height, const DXGI_FORMAT format);
